@@ -122,7 +122,7 @@ FREE_ENTRY:	free(entry);
 RETURN_NULL: 	return NULL;
 }
 
-bool cjson_parse(CJSON cjson, const char *string)
+bool cjson_parse(CJson cjson, const char *string)
 {
 	Entry start, entry, prev;
 

@@ -13,26 +13,11 @@ struct cjson
 	size_t total;
 };
 
-struct cjson_value
-{
-	enum cjson_value_type type;
-
-	union {
-		long i;
-		double f;
-		char *s;
-		bool b;
-		struct cjson_value *o;
-		struct cjson_value *a;
-		struct cjson *j;
-	};
-};
-
 struct cjson_entry
 {
 	char *key;
 	
-	struct cjson_value *value;
+	CJsonValue value;
 
 	struct cjson_entry *next;
 };

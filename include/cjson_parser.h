@@ -5,6 +5,6 @@
 
 #include "cjson.h"
 
-bool cjson_parse(CJSON cjson, const char *string);
+bool cjson_parse(CJson cjson, const char *string);
 
 #endif

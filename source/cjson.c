@@ -9,9 +9,9 @@
 #define _CJSON_INTERNAL
 #include "cjson_internal.h"
 
-CJSON cjson_create_empty(void)
+CJson cjson_create_empty(void)
 {
-	CJSON cjson;
+	CJson cjson;
 
 	cjson = malloc(sizeof(struct cjson));
 	if (cjson == NULL)
@@ -23,9 +23,9 @@ CJSON cjson_create_empty(void)
 	return cjson;
 }
 
-CJSON cjson_create_from_file(const char *filename)
+CJson cjson_create_from_file(const char *filename)
 {
-	CJSON cjson;
+	CJson cjson;
 	FILE *fp;
 	long length;
 	char *string;
@@ -69,7 +69,7 @@ DESTROY_CJSON:	cjson_destroy(cjson);
 RETURN_NULL: 	return NULL;
 }
 
-void cjson_destroy(CJSON cjson)
+void cjson_destroy(CJson cjson)
 {
 	free(cjson);
 }

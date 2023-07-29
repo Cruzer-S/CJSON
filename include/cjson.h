@@ -11,8 +11,9 @@
 #define cjson_create_0 cjson_create_empty
 #define cjson_create_1 cjson_create_from_file
 
-typedef struct cjson *CJSON;
+typedef struct cjson *CJson;
 typedef void *cjson_array;
+typedef struct cjson_value *CJsonValue;
 
 enum cjson_value_type
 {
@@ -26,19 +27,27 @@ enum cjson_value_type
 	CJSON_VALUE_TYPE_NULL
 };
 
-CJSON cjson_create_empty(void);
-CJSON cjson_create_from_file(const char *filename);
+struct cjson_value
+{
+	enum cjson_value_type type;
 
-bool cjson_has_key(CJSON cjson,const char *key);
-enum cjson_value_type cjson_get_type(CJSON cjson, const char *key);
+	union {
+		long i;
+		double f;
+		char *s;
+		bool b;
+		struct cjson_value *o;
+		struct cjson_value *a;
+		struct cjson *j;
+	};
+};
 
-long cjson_get_int(CJSON cjson, const char *key);
-double cjson_get_float(CJSON cjson, const char *key);
-char *cjson_get_string(CJSON cjson, const char *key);
-bool cjson_get_boolean(CJSON cjson, const char *key);
-CJSON cjson_get_object(CJSON cjson, const char *key);
-cjson_array cjson_get_array(CJSON cjson, const char *key);
+CJson cjson_create_empty(void);
+CJson cjson_create_from_file(const char *filename);
 
-void cjson_destroy(CJSON );
+bool cjson_has_key(CJson cjson,const char *key);
+CJsonValue cjson_get(CJson cjson, const char *key);
+
+void cjson_destroy(CJson );
 
 #endif

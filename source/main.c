@@ -4,7 +4,7 @@
 
 int main(void)
 {
-	CJSON cjson = cjson_create("sample.json");
+	CJson cjson = cjson_create("sample.json");
 
 	cjson_destroy(cjson);
 
