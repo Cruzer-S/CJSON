@@ -46,7 +46,7 @@ RETURN_NULL:	return NULL;
 
 int main(int argc, char *argv[])
 {
-	CJSON cjson;
+	struct cjson_object *cjson;
 	char *contents;
 
 	if (argc != 2) {
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	cjson = cjson_create(contents);
+	cjson = cjson_create_object(contents);
 	if (cjson == NULL) {
 		free(contents);
 		exit(EXIT_FAILURE);
