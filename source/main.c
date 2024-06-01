@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
 
 	cjson = cjson_create(contents);
 
+	cjson_print(cjson); fputc('\n', stdout);
+
 	cjson_destroy(cjson);
 
 	free(contents);

@@ -8,7 +8,9 @@
 #include <inttypes.h>
 
 #define SKIP_WHITESPACE(STR) for (; isspace(*(STR)); (STR)++)
+#define INDENT_TO(N) for (size_t i = 0; i < N; i++) fputc('\t', stdout);
 #define DEFAULT_STRING_SIZE 64
+#define DEFAULT_BUFFER_SIZE BUFSIZ
 
 enum cjson_value_type {
 	CJSON_VALUE_TYPE_BOOLEAN,
@@ -19,46 +21,39 @@ enum cjson_value_type {
 	CJSON_VALUE_TYPE_OBJECT
 };
 
-struct cjson {
-	char *json;
-	char *compress;
-
-	struct cjson_object *head;
-};
-
 struct cjson_value {
 	enum cjson_value_type type;
 
 	union {
 		double n;
 		char *s;
-		struct cjson_array * a;
-		struct cjson_object * o;
+		struct cjson_array *a;
+		struct cjson_object *o;
 		bool b;
 	};
 };
 
 struct cjson_array {
-	struct cjson_value * value;
+	struct cjson_value *value;
 
 	struct cjson_array *next;
 };
 
 struct cjson_pair {
 	char *key;
-	struct cjson_value * value;
+	struct cjson_value *value;
 
 	struct cjson_pair *next;
 };
 
 struct cjson_object {
-	int npairs;
-
-	struct cjson_pair * head;
+	struct cjson_pair *head;
 };
 
-struct cjson_value * parse_value(char *, char **);
-struct cjson_object * parse_object(char *, char **);
+struct cjson_value *parse_value(char *, char **);
+struct cjson_object *parse_object(char *, char **);
+
+void destroy_object(struct cjson_object *object);
 
 int parse_escaped_unicode(char *escape, char **endptr, char *ret)
 {
@@ -90,7 +85,7 @@ int parse_escaped_unicode(char *escape, char **endptr, char *ret)
 	return length;
 }
 
-static int parse_escape(char *escape, char **endptr, char ret[MB_CUR_MAX])
+int parse_escape(char *escape, char **endptr, char ret[MB_CUR_MAX])
 {
 	int length = 1;
 
@@ -118,6 +113,17 @@ static int parse_escape(char *escape, char **endptr, char ret[MB_CUR_MAX])
 	return length;
 }
 
+void destroy_value(struct cjson_value * value);
+
+void destroy_array(struct cjson_array *array)
+{
+	for (struct cjson_array *temp; array; array = temp)
+	{
+		temp = array->next;
+		destroy_value(array->value);
+	}
+}
+
 void destroy_value(struct cjson_value * value)
 {
 	switch(value->type) {
@@ -127,10 +133,11 @@ void destroy_value(struct cjson_value * value)
 		/* do nothing */
 		break;
 	case CJSON_VALUE_TYPE_ARRAY:
-
+		destroy_array(value->a);
 		break;
 
 	case CJSON_VALUE_TYPE_OBJECT:
+		destroy_object(value->o);
 		break;
 
 	case CJSON_VALUE_TYPE_STRING:
@@ -182,16 +189,11 @@ struct cjson_array * parse_array(char *json, char **endptr)
 
 	return head;
 
-DESTROY_ARRAY:	for (struct cjson_array *temp, *cur = head; cur; cur = temp)
-		{
-			temp = cur->next;
-			destroy_value(cur->value);
-		}
-			
+DESTROY_ARRAY:	destroy_array(head);
 RETURN_NULL:	return NULL;
 }
 
-static void *realloc2(void *json, size_t require, size_t *resize)
+void *realloc2(void *json, size_t require, size_t *resize)
 {
 	char *new;
 	size_t size = 1;
@@ -206,7 +208,7 @@ static void *realloc2(void *json, size_t require, size_t *resize)
 	return new;
 }
 
-static char *parse_string(char *json, char **endptr)
+char *parse_string(char *json, char **endptr)
 {
 	size_t index = 0;
 	size_t reqsiz = 0;
@@ -328,7 +330,7 @@ void destroy_pair(struct cjson_pair * pair)
 	free(pair);
 }
 
-struct cjson_pair * parse_pair(char *json, char **endptr)
+struct cjson_pair *parse_pair(char *json, char **endptr)
 {
 	struct cjson_pair * pair = malloc(sizeof(struct cjson_pair));
 	if (pair == NULL)
@@ -357,12 +359,7 @@ FREE_PAIR:	free(pair);
 RETURN_NULL:	return NULL;
 }
 
-void cjson_destroy(CJSON cjson)
-{
-	free(cjson);
-}
-
-struct cjson_object * parse_object(char *json, char **endptr)
+struct cjson_object *parse_object(char *json, char **endptr)
 {
 	struct cjson_object * object;
 	
@@ -374,12 +371,11 @@ struct cjson_object * parse_object(char *json, char **endptr)
 		goto RETURN_NULL;
 
 	object->head = NULL;
-	object->npairs = 0;
 
 	SKIP_WHITESPACE(json);
 
 	for (struct cjson_pair *cur, *pair;
-	     *json != '}' && *json != '\0'; object->npairs++)
+	     *json != '}' && *json != '\0'; )
 	{
 		pair = parse_pair(json, &json);
 
@@ -407,24 +403,98 @@ struct cjson_object * parse_object(char *json, char **endptr)
 
 	return object;
 
-DESTROY_OBJECT:	for (struct cjson_pair *pair = object->head, *keep;
-	             pair; pair = keep)
-		{
-			keep = pair->next;
-			destroy_pair(pair);
-		}
-FREE_OBJECT:	free(object);
+DESTROY_OBJECT:	destroy_object(object);
 RETURN_NULL:	return NULL;
+}
+
+void print_object(struct cjson_object *object, size_t level);
+void print_value(struct cjson_value *value, size_t level);
+
+void print_array(struct cjson_array *array, size_t level)
+{
+	fputs("[\n", stdout);
+
+	for (; array; array = array->next) {
+		INDENT_TO(level);
+		print_value(array->value, level);
+
+		if (array->next) fputc(',', stdout);
+		fputc('\n', stdout);
+	}
+
+
+	INDENT_TO(level - 1);
+	fputc(']', stdout);
+}
+
+void print_value(struct cjson_value *value, size_t level)
+{
+	switch(value->type) {
+	case CJSON_VALUE_TYPE_NULL:
+		fputs("null", stdout);
+		break;
+	case CJSON_VALUE_TYPE_ARRAY:
+		print_array(value->a, level + 1);
+		break;
+	case CJSON_VALUE_TYPE_NUMBER:
+		printf("%lf", value->n);
+		break;
+	case CJSON_VALUE_TYPE_OBJECT:
+		print_object(value->o, level + 1);
+		break;
+	case CJSON_VALUE_TYPE_STRING:
+		printf("\"%s\"", value->s);
+		break;
+
+	case CJSON_VALUE_TYPE_BOOLEAN:
+		printf("%s", value->b ? "true" : "false");
+		break;
+	}
+
+}
+
+void print_object(struct cjson_object *object, size_t level)
+{
+	fputs("{\n", stdout);
+
+	for (struct cjson_pair *pair = object->head; pair; pair = pair->next)
+	{
+		INDENT_TO(level);
+
+		printf("\"%s\": ", pair->key);
+		print_value(pair->value, level);
+		
+		if (pair->next) fputc(',', stdout);
+		fputc('\n', stdout);
+	}
+
+	INDENT_TO(level - 1);
+
+	fputc('}', stdout);
+}
+
+void cjson_print(CJSON cjson)
+{
+	print_object(cjson, 1);
+}
+
+void destroy_object(struct cjson_object *object)
+{
+	for (struct cjson_pair *temp, *pair = object->head; pair; pair = temp)
+	{
+		temp = pair->next;
+		destroy_pair(pair);
+	}
+
+	free(object);
 }
 
 CJSON cjson_create(char *json)
 {
-	CJSON cjson = malloc(sizeof(struct cjson));
-	if (cjson == NULL)
-		return NULL;
+	return parse_object(json, NULL);
+}
 
-	cjson->json = json;
-	cjson->head = parse_object(json, NULL);
-
-	return cjson;
+void cjson_destroy(CJSON cjson)
+{
+	destroy_object(cjson);
 }

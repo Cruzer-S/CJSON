@@ -4,10 +4,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct cjson *CJSON;
+typedef void *CJSON;
 
 CJSON cjson_create(char *json);
-char *cjson_to_json(CJSON );
+
+void cjson_print(CJSON cjson);
 
 void cjson_destroy(CJSON );
 
