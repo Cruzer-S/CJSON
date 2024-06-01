@@ -21,9 +21,7 @@ char *read_file(const char *filename)
 		goto CLOSE_FILE;
 
 	while ( !feof(fp) ) {
-		size_t readlen;
-
-		if (index + bufsiz <= BUFSIZ) {
+		if (index + bufsiz < BUFSIZ) {
 			char *new_buffer = realloc(buffer, bufsiz * 2);
 			if (new_buffer == NULL)
 				goto FREE_BUFFER;
@@ -32,10 +30,10 @@ char *read_file(const char *filename)
 			bufsiz *= 2;
 		}
 
-		readlen = fread(&buffer[index], 1, BUFSIZ, fp);
-		
-		index += readlen;
+		index += fread(&buffer[index], 1, BUFSIZ, fp);
 	}
+
+	buffer[index] = '\0';
 
 	fclose(fp);
 
@@ -63,6 +61,10 @@ int main(int argc, char *argv[])
 	}
 
 	cjson = cjson_create(contents);
+	if (cjson == NULL) {
+		free(contents);
+		exit(EXIT_FAILURE);
+	}
 
 	cjson_print(cjson); fputc('\n', stdout);
 

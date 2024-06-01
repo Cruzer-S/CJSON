@@ -113,7 +113,7 @@ int parse_escape(char *escape, char **endptr, char ret[MB_CUR_MAX])
 	return length;
 }
 
-void destroy_value(struct cjson_value * value);
+void destroy_value(struct cjson_value *value);
 
 void destroy_array(struct cjson_array *array)
 {
@@ -121,10 +121,11 @@ void destroy_array(struct cjson_array *array)
 	{
 		temp = array->next;
 		destroy_value(array->value);
+		free(array);
 	}
 }
 
-void destroy_value(struct cjson_value * value)
+void destroy_value(struct cjson_value *value)
 {
 	switch(value->type) {
 	case CJSON_VALUE_TYPE_NUMBER:
@@ -148,7 +149,7 @@ void destroy_value(struct cjson_value * value)
 	free(value);
 }
 
-struct cjson_array * parse_array(char *json, char **endptr)
+struct cjson_array *parse_array(char *json, char **endptr)
 {
 	struct cjson_array *head = NULL;
 
@@ -157,13 +158,18 @@ struct cjson_array * parse_array(char *json, char **endptr)
 
 	SKIP_WHITESPACE(json);
 	for (struct cjson_array *cur = NULL, *array;
-	     *json != ']' && *json != ' '; )
+	     *json != ']' && *json != '\0'; )
 	{
 		array = malloc(sizeof(struct cjson_array));
 		if (array == NULL)
 			goto DESTROY_ARRAY;
 
 		array->value = parse_value(json, &json);
+		if (array->value == NULL) {
+			free(array);
+			goto DESTROY_ARRAY;
+		}
+
 		array->next = NULL;
 
 		SKIP_WHITESPACE(json);
@@ -172,7 +178,7 @@ struct cjson_array * parse_array(char *json, char **endptr)
 			SKIP_WHITESPACE(json);
 		}
 
-		if (cur == NULL) {
+		if (head == NULL) {
 			head = array;
 		} else {
 			cur->next = array;
@@ -343,18 +349,21 @@ struct cjson_pair *parse_pair(char *json, char **endptr)
 	SKIP_WHITESPACE(json);
 
 	if (*json++ != ':') // move to next character
-		goto FREE_PAIR;
+		goto FREE_KEY;
 
 	SKIP_WHITESPACE(json);
 	pair->value = parse_value(json, &json);
 	if (pair->value == NULL)
-		goto FREE_PAIR;
+		goto FREE_KEY;
+
+	pair->next = NULL;
 
 	if (endptr != NULL)
 		*endptr = json;
 
 	return pair;
 
+FREE_KEY:	free(pair->key);
 FREE_PAIR:	free(pair);
 RETURN_NULL:	return NULL;
 }
@@ -447,7 +456,7 @@ void print_value(struct cjson_value *value, size_t level)
 		break;
 
 	case CJSON_VALUE_TYPE_BOOLEAN:
-		printf("%s", value->b ? "true" : "false");
+		fputs(value->b ? "true" : "false", stdout);
 		break;
 	}
 
