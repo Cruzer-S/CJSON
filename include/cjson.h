@@ -26,7 +26,6 @@ struct cjson_value {
 };
 
 struct cjson_object *cjson_create_object(char *json);
-struct cjson_array *cjson_create_array(char *json);
 
 void cjson_print(struct cjson_object *cjson);
 
@@ -60,11 +59,25 @@ bool cjson_add_in_array(
 	struct cjson_value value 
 );
 
-struct cjson_value *cjson_foreach(struct cjson_object *cjson);
-struct cjson_value *cjson_foreach_next(void);
-void cjson_foreach_insert(struct cjson_value value);
-void cjson_foreach_remove(void);
+#define cjson_foreach(A) _Generic((A),					\
+	struct cjson_object *: cjson_foreach_object,			\
+	struct cjson_array *: cjson_foreach_array			\
+)(A)
 
-void cjson_destroy(struct cjson_object *cjson);
+#define cjson_foreach_next(A) _Generic((A),				\
+	struct cjson_object *: cjson_foreach_object_next,		\
+	struct cjson_array *: cjson_foreach_array_next			\
+)(A)
+
+char *cjson_foreach_object(struct cjson_object *cjson);
+char *cjson_foreach_object_next(struct cjson_object *cjson);
+
+struct cjson_value *cjson_foreach_array(struct cjson_array *array);
+struct cjson_value *cjson_foreach_array_next(struct cjson_array *array);
+
+void cjson_foreach_object_insert(char *key, struct cjson_value value);
+void cjson_foreach_object_remove(struct cjson_object *cjson);
+
+void cjson_destroy_object(struct cjson_object *cjson);
 
 #endif
