@@ -50,6 +50,7 @@ CLOSE_FILE:	fclose(fp);
 RETURN_NULL:	return NULL;
 }
 
+void print_value(struct cjson_value *value, int depth);
 void print_object(struct cjson_object *json, int depth);
 void print_array(struct cjson_array *array, int depth);
 

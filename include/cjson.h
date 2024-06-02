@@ -47,16 +47,21 @@ void cjson_print(struct cjson_object *cjson);
 struct cjson_value *cjson_get_by_key(struct cjson_object *cjson, char *key);
 struct cjson_value *cjson_get_by_index(struct cjson_array *array, int index);
 
-bool cjson_del_by_key(struct cjson_object *cjson, char *key);
-bool cjson_del_by_index(struct cjson_object *cjson, int index);
+bool cjson_del_by_key(struct cjson_object *object, char *key);
+bool cjson_del_by_index(struct cjson_array *object, int index);
+
+bool cjson_foreach_object_del(struct cjson_object *object);
+bool cjson_foreach_object_add(struct cjson_object *object,
+			      char *key, struct cjson_value *value);
 
 bool cjson_add_in_object(
-	struct cjson_object *cjson,
-	struct cjson_value value
+	struct cjson_object *object,
+	char *key, struct cjson_value value,
+	bool forward
 );
 bool cjson_add_in_array(
 	struct cjson_array *cjson,
-	struct cjson_value value 
+	struct cjson_value value
 );
 
 #define cjson_foreach(A) _Generic((A),					\
@@ -74,9 +79,6 @@ char *cjson_foreach_object_next(struct cjson_object *cjson);
 
 struct cjson_value *cjson_foreach_array(struct cjson_array *array);
 struct cjson_value *cjson_foreach_array_next(struct cjson_array *array);
-
-void cjson_foreach_object_insert(char *key, struct cjson_value value);
-void cjson_foreach_object_remove(struct cjson_object *cjson);
 
 void cjson_destroy_object(struct cjson_object *cjson);
 

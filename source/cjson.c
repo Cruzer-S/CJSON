@@ -537,19 +537,6 @@ struct cjson_value *cjson_get_by_index(struct cjson_array *array, int index)
 	return &LIST_ENTRY(list, struct cjson_entry, list)->value;
 }
 
-
-bool cjson_del_by_key(struct cjson_object *cjson, char *key);
-bool cjson_del_by_index(struct cjson_object *cjson, int index);
-
-bool cjson_add_in_object(
-	struct cjson_object *cjson,
-	struct cjson_value value
-);
-bool cjson_add_in_array(
-	struct cjson_array *cjson,
-	struct cjson_value value 
-);
-
 char *cjson_foreach_object(struct cjson_object *object)
 {
 	if (LIST_IS_EMPTY(&object->head))
@@ -589,6 +576,3 @@ struct cjson_value *cjson_foreach_array_next(struct cjson_array *array)
 
 	return &LIST_ENTRY(array->pointer, struct cjson_entry, list)->value;
 }
-
-void cjson_foreach_insert(char *key, struct cjson_value value);
-void cjson_foreach_remove(void);
