@@ -6,21 +6,21 @@
 	"object": {
 		"name": "mythos",
 		"age": 25,
-		"height": 165.0
+		"height": 165.0,
 		"programmer?": true,
 		"numbers": [1, 2, 5.5, "hello", "workd", null, true, false, {
 					"is": "number",
 					"number": 15,
 					"i'm": true,
 					"but": false,
+					"unicode": "\uD834\uDD1E",
 					"in that case": null
 				},
 				[1, 2, 3, "list in list?"],
 				"okay done"	
 		],
 		"good": false
-	},
-
+	}
 	"true?": true,
 	"false?": false,
 	"null?": null
