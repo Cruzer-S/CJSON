@@ -36,7 +36,7 @@ void cjson_print(struct cjson_object *cjson);
 
 #define cjson_add(A, ...) _Generic((A), 				\
 	struct cjson_object *: cjson_add_in_object,			\
-	struct cjson_array *: cjson_add_in_list				\
+	struct cjson_array *: cjson_add_in_array			\
 )(A, __VA_ARGS__)
 
 #define cjson_del(A, ...) _Generic((A), 				\
