@@ -576,3 +576,44 @@ struct cjson_value *cjson_foreach_array_next(struct cjson_array *array)
 
 	return &LIST_ENTRY(array->pointer, struct cjson_entry, list)->value;
 }
+
+bool cjson_add_in_object(
+	struct cjson_object *object,
+	char *key, struct cjson_value value
+) {
+	struct cjson_pair *pair;
+
+	pair = malloc(sizeof(struct cjson_pair));
+	if ( !pair )
+		return false;
+
+	pair->value = value;
+	switch (value.type) {
+	case CJSON_VALUE_TYPE_NUMBER:
+	case CJSON_VALUE_TYPE_BOOLEAN:
+	case CJSON_VALUE_TYPE_NULL:
+	case CJSON_VALUE_TYPE_ARRAY:
+	case CJSON_VALUE_TYPE_OBJECT:
+		/* do nothing */
+		break;
+	case CJSON_VALUE_TYPE_STRING:
+		pair->value.s = strdup(value.s);
+		if ( !pair->value.s ) {
+			free(pair);
+			return false;
+		}
+		break;
+	}
+
+	list_add_tail(&object->head, &pair->list);
+
+	return true;
+}
+
+bool cjson_add_in_array(
+	struct cjson_array *cjson,
+	struct cjson_value value
+)
+{
+	return false;
+}

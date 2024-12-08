@@ -56,8 +56,7 @@ bool cjson_foreach_object_add(struct cjson_object *object,
 
 bool cjson_add_in_object(
 	struct cjson_object *object,
-	char *key, struct cjson_value value,
-	bool forward
+	char *key, struct cjson_value value
 );
 bool cjson_add_in_array(
 	struct cjson_array *cjson,
