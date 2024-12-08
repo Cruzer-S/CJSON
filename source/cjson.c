@@ -587,6 +587,12 @@ bool cjson_add_in_object(
 	if ( !pair )
 		return false;
 
+	pair->key = strdup(key);
+	if ( !pair->key ) {
+		free(pair);
+		return false;
+	}
+
 	pair->value = value;
 	switch (value.type) {
 	case CJSON_VALUE_TYPE_NUMBER:
@@ -599,6 +605,7 @@ bool cjson_add_in_object(
 	case CJSON_VALUE_TYPE_STRING:
 		pair->value.s = strdup(value.s);
 		if ( !pair->value.s ) {
+			free(pair->key);
 			free(pair);
 			return false;
 		}
